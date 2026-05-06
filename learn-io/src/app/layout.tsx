@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Footer } from "@/shared/components/footer";
-import { Header } from "@/shared/components/header";
+import { Header } from "@/shared/components/header/Header";
 import "./globals.css";
 
 export const metadata: Metadata = {

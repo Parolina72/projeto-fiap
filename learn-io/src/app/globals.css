@@ -1,3 +1,5 @@
+ @import "tailwindcss";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -55,4 +57,17 @@ pre,
 kbd,
 samp {
   font-family: var(--code-font-family);
+}
+
+@theme {
+  /* Cores personalizadas */
+  --color-background-cinza: #666666;
+  --color-background-branco: #f3f3f3;
+  --color-background-azul-royal-profundo: #2c3fa6;
+  --color-background-azul-escuro-vibrante: #3550b8;
+  --color-background-azul-medio-escuro: #4361cb;
+  --color-background-azul-real-vibrante: #3b55c2;
+
+  /* Fonte personalizada */
+  --font-sans: Arial, sans-serif;
 }
