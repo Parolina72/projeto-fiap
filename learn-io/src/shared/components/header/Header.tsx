@@ -16,6 +16,9 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
           <a href="#" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
             Administrativo
           </a>
+          <button type='button' className='ml-auto rounded-md border border-white/30 px-4 py-2 text-white text-[0.95rem] leading-none hover:bg-white/10'>
+            Login
+          </button>
         </div>
       </nav>
     </header>
