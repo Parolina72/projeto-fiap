@@ -1,4 +1,5 @@
 import { posts } from "@/shared/data/posts";
+import Link from "next/link";
 
 type HomePageProps = {
   searchParams?: Promise<{
@@ -48,7 +49,14 @@ export default async function Home({ searchParams }: HomePageProps) {
           <ul className="m-0 list-none space-y-4 p-0">
             {filteredPosts.map((post) => (
               <li key={post.id} className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-                <h3 className="m-0 text-xl font-semibold text-zinc-900">{post.title}</h3>
+                <h3 className="m-0 text-xl font-semibold">
+                  <Link
+                    href={`/posts/${post.id}`}
+                    className="rounded-sm text-background-azul-real-vibrante no-underline hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-background-azul-real-vibrante/40"
+                  >
+                    {post.title}
+                  </Link>
+                </h3>
                 <p className="mb-2 mt-1 text-sm text-zinc-600">
                   Autor: <strong>{post.author}</strong>
                 </p>
