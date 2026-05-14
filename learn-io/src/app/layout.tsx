@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "@/shared/components/footer";
 import { Header } from "@/shared/components/header/Header";
+import { ThemeProvider } from "@/shared/components/theme-provider/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,11 +15,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body>
-        <Header />
-        {children}
-        <Footer />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Header />
+          {children}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

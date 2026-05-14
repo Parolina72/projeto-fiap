@@ -1,7 +1,7 @@
  @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #efefef;
   --foreground: #171717;
   --default-font-family:
     "Untitled Sans",
@@ -21,11 +21,22 @@
     "Segoe UI Emoji";
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #383838;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #3b3b3b;
+  --foreground: #ededed;
+}
+
+.light {
+  --background: #efefef;
+  --foreground: #171717;
+}
+
+.light .learnio-header-top {
+  background: #3D63DD;
+}
+
+.light .learnio-header-bottom {
+  background: #4e7eef;
 }
 
 * {
