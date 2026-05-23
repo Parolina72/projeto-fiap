@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/shared/components/theme-toggle/ThemeToggle";
 
 type HeaderProps = {
@@ -5,6 +8,24 @@ type HeaderProps = {
 };
 
 export function Header({ title = "Learn.io" }: HeaderProps) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const storedAuth = localStorage.getItem("isAuthenticated");
+    setIsAuthenticated(storedAuth === "true");
+  }, []);
+
+  function handleAuthToggle() {
+    if (isAuthenticated) {
+      localStorage.removeItem("isAuthenticated");
+      setIsAuthenticated(false);
+      return;
+    }
+
+    localStorage.setItem("isAuthenticated", "true");
+    setIsAuthenticated(true);
+  }
+
   return (
     <header className='w-full'>
       <div className='learnio-header-top w-full bg-background-azul-royal-profundo bg-[linear-gradient(180deg,#26388f_0%,#2f43ad_48%,#3b55c2_100%)]'>
@@ -21,11 +42,20 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
           <a href="#" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
             Administrativo
           </a>
-          <button type='button' className='ml-auto rounded-md border border-white/30 px-4 py-2 text-white text-[0.95rem] leading-none hover:bg-white/10'>
-            Login
+          {isAuthenticated && (
+            <a href="/posts/create" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
+              Criar Postagem
+            </a>
+          )}
+          <button
+            type='button'
+            onClick={handleAuthToggle}
+            className='ml-auto rounded-md border border-white/30 px-4 py-2 text-white text-[0.95rem] leading-none hover:bg-white/10'
+          >
+            {isAuthenticated ? "Sair" : "Login"}
           </button>
         </div>
-        </div>
+      </div>
     </header>
   );
 }

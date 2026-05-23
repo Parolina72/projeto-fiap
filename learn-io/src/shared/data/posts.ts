@@ -8,7 +8,7 @@ export type Post = {
 export const posts: Post[] = [
   {
     id: 1,
-    title: "Introdução ao React",
+    title: "Introdução ao React - Atualizado",
     author: "Ana Souza",
     body: "Entenda componentes, props e estado para criar interfaces modernas.",
   },
@@ -66,4 +66,10 @@ export const posts: Post[] = [
     author: "Lucas Rocha",
     body: "Publique projetos com segurança, performance e monitoramento continuo.",
   },
+  {
+    id: 11,
+    title: "teste",
+    author: "teste",
+    body: "teste",
+  }
 ];
