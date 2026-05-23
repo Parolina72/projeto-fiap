@@ -1,12 +1,18 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { posts, type Post } from "@/shared/data/posts";
+import { useRouter } from "next/navigation";
+import { type Post } from "@/shared/data/posts";
+import { savePost, updatePost } from "@/shared/data/actions";
 
 type FormPostProps = {
   post?: Post;
 };
 
 export function FormPost({ post }: FormPostProps) {
+  const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState(post?.title ?? "");
   const [author, setAuthor] = useState(post?.author ?? "");
   const [body, setBody] = useState(post?.body ?? "");
@@ -19,8 +25,9 @@ export function FormPost({ post }: FormPostProps) {
     }
   }, [post]);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsLoading(true);
 
     const trimmedTitle = title.trim();
     const trimmedAuthor = author.trim();
@@ -28,40 +35,51 @@ export function FormPost({ post }: FormPostProps) {
 
     if (!trimmedTitle || !trimmedAuthor || !trimmedBody) {
       setMessage(`Preencha todos os campos para ${post ? "atualizar" : "criar"} o post.`);
+      setIsLoading(false);
       return;
     }
 
-    if (post) {
-      const index = posts.findIndex((item) => item.id === post.id);
-
-      if (index !== -1) {
-        posts[index] = {
-          id: post.id,
+    try {
+      if (post) {
+        const result = await updatePost(post.id, {
           title: trimmedTitle,
           author: trimmedAuthor,
           body: trimmedBody,
-        };
-        setMessage("Post atualizado com sucesso!");
-        return;
+        });
+
+        if (result.success) {
+          setMessage(result.message);
+          setTimeout(() => {
+            router.push(`/posts/${post.id}`);
+          }, 1500);
+        } else {
+          setMessage(result.message);
+        }
+      } else {
+        const result = await savePost({
+          title: trimmedTitle,
+          author: trimmedAuthor,
+          body: trimmedBody,
+        });
+
+        if (result.success) {
+          setMessage(result.message);
+          setTitle("");
+          setAuthor("");
+          setBody("");
+          setTimeout(() => {
+            router.push("/");
+          }, 1500);
+        } else {
+          setMessage(result.message);
+        }
       }
-
-      setMessage("Não foi possível encontrar o post para atualização.");
-      return;
+    } catch (error) {
+      console.error("Erro ao salvar post:", error);
+      setMessage("Erro ao salvar o post. Tente novamente.");
+    } finally {
+      setIsLoading(false);
     }
-
-    const nextId = posts.length > 0 ? Math.max(...posts.map((item) => item.id)) + 1 : 1;
-
-    posts.push({
-      id: nextId,
-      title: trimmedTitle,
-      author: trimmedAuthor,
-      body: trimmedBody,
-    });
-
-    setTitle("");
-    setAuthor("");
-    setBody("");
-    setMessage("Post criado com sucesso!");
   }
 
   const formTitle = post ? "Editar post" : "Criar novo post";
@@ -129,9 +147,10 @@ export function FormPost({ post }: FormPostProps) {
 
         <button
           type="submit"
-          className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={isLoading}
+          className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {buttonLabel}
+          {isLoading ? "Salvando..." : buttonLabel}
         </button>
       </form>
     </div>

@@ -43,7 +43,7 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
             Administrativo
           </a>
           {isAuthenticated && (
-            <a href="#" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
+            <a href="/posts/create" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
               Criar Postagem
             </a>
           )}
