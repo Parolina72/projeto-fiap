@@ -51,6 +51,24 @@ export async function createPerson(person: Omit<IPerson, "id">): Promise<IPerson
   return response.json();
 }
 
+export async function findUserByCredentials(username: string, password: string): Promise<IUser | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/user?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Erro ao buscar o usuário: ${response.status}`);
+  }
+
+  const users = await response.json();
+
+  if (Array.isArray(users)) {
+    return users[0] ?? null;
+  }
+
+  return users || null;
+}
+
 export async function createUser(user: Omit<IUser, "id">): Promise<IUser> {
   const response = await fetch(`${API_BASE_URL}/user`, {
     method: "POST",
