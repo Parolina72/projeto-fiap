@@ -2,8 +2,8 @@
 
 export function Footer() {
   return (
-    <footer className='flex items-center justify-center min-h-[38px] bg-background-cinza w-[100%]'>
-      <p className='m-0 text-sm text-white/90'>Todos os direitos reservados a FIAP</p>
+    <footer className='learnio-footer flex min-h-[38px] w-[100%] items-center justify-center'>
+      <p className='m-0 text-sm text-current'>Todos os direitos reservados a FIAP</p>
     </footer>
   );
 }

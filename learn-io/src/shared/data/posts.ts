@@ -3,6 +3,7 @@ export type Post = {
   title: string;
   author: string;
   body: string;
+  image_url?: string;
 };
 
 export const posts: Post[] = [

@@ -45,13 +45,107 @@ function getAuthHeaders(): HeadersInit {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   };
-  
+
   const token = getAuthToken();
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  
+
   return headers;
+}
+
+function findNumericId(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  for (const key of ["id", "user_id", "author_id", "userId", "authorId"]) {
+    const resolved = findNumericId(candidate[key]);
+
+    if (typeof resolved === "number") {
+      return resolved;
+    }
+  }
+
+  for (const nestedValue of Object.values(candidate)) {
+    const resolved = findNumericId(nestedValue);
+
+    if (typeof resolved === "number") {
+      return resolved;
+    }
+  }
+
+  return undefined;
+}
+
+function readStoredJson(key: string): unknown {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const rawValue = localStorage.getItem(key);
+
+  if (!rawValue || rawValue === "undefined" || rawValue === "null") {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(rawValue) as unknown;
+  } catch (error) {
+    console.error(`Erro ao ler ${key} salvo:`, error);
+    return undefined;
+  }
+}
+
+function decodeBase64Url(value: string): string {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+
+  if (typeof atob === "function") {
+    return decodeURIComponent(
+      Array.from(atob(padded), (character) =>
+        `%${character.charCodeAt(0).toString(16).padStart(2, "0")}`
+      ).join("")
+    );
+  }
+
+  return Buffer.from(padded, "base64").toString("utf-8");
+}
+
+export function extractAuthorIdFromToken(token?: string | null): number | undefined {
+  if (!token) {
+    return undefined;
+  }
+
+  const tokenParts = token.split(".");
+
+  if (tokenParts.length < 2) {
+    return undefined;
+  }
+
+  try {
+    const payload = JSON.parse(decodeBase64Url(tokenParts[1])) as Record<string, unknown>;
+    return (
+      findNumericId(payload.author_id) ??
+      findNumericId(payload.user_id) ??
+      (payload.role === "PROFESSOR" ? 1 : undefined) ??
+      findNumericId(payload.sub)
+    );
+  } catch (error) {
+    console.error("Erro ao decodificar token JWT:", error);
+    return undefined;
+  }
 }
 
 
@@ -76,17 +170,17 @@ export async function createPerson(person: Omit<IPerson, "id">): Promise<IPerson
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     console.error("Dados do erro:", errorData);
-      
-      if (errorData && Array.isArray(errorData)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const errorMessages = errorData.map((err: any) => {
-          if (err.path && err.message) {
-            return `${err.path.join('.')}: ${err.message}`;
-          }
-          return err.message || 'Erro desconhecido';
-        }).join('; ');
-        throw new Error(`Erro de validação: ${errorMessages}`);
-      }
+
+    if (errorData && Array.isArray(errorData)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorMessages = errorData.map((err: any) => {
+        if (err.path && err.message) {
+          return `${err.path.join('.')}: ${err.message}`;
+        }
+        return err.message || 'Erro desconhecido';
+      }).join('; ');
+      throw new Error(`Erro de validação: ${errorMessages}`);
+    }
     throw new Error(errorData.message || `Erro ao criar pessoa (${response.status})`);
   }
 
@@ -142,17 +236,17 @@ export async function createUser(user: Omit<IUser, "id">): Promise<IUser> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     console.error("Dados do erro (User):", errorData);
-      
-      if (errorData && Array.isArray(errorData)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const errorMessages = errorData.map((err: any) => {
-          if (err.path && err.message) {
-            return `${err.path.join('.')}: ${err.message}`;
-          }
-          return err.message || 'Erro desconhecido';
-        }).join('; ');
-        throw new Error(`Erro de validação: ${errorMessages}`);
-      }
+
+    if (errorData && Array.isArray(errorData)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errorMessages = errorData.map((err: any) => {
+        if (err.path && err.message) {
+          return `${err.path.join('.')}: ${err.message}`;
+        }
+        return err.message || 'Erro desconhecido';
+      }).join('; ');
+      throw new Error(`Erro de validação: ${errorMessages}`);
+    }
   }
   return response.json();
 }
@@ -160,7 +254,7 @@ export async function createUser(user: Omit<IUser, "id">): Promise<IUser> {
 export async function getPosts(): Promise<IPost[]> {
   console.log("Buscando posts do backend...");
   console.log("URL:", `${API_BASE_URL}/api/posts`);
-  
+
   try {
     const response = await fetch(`${API_BASE_URL}/posts`, {
       method: "GET",

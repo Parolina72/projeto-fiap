@@ -1,84 +1,203 @@
  @import "tailwindcss";
 
-:root {
-  --background: #efefef;
-  --foreground: #171717;
-  --default-font-family:
-    "Untitled Sans",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Helvetica,
-    Arial,
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji";
-  --code-font-family:
-    "Sohne Mono",
-    "Menlo",
-    monospace,
-    "Apple Color Emoji",
-    "Segoe UI Emoji";
-}
+ :root {
+   color-scheme: light;
+   --background: oklch(0.965 0.012 248);
+   --foreground: oklch(0.225 0.02 255);
+   --surface: oklch(0.985 0.005 248);
+   --surface-strong: oklch(0.955 0.01 248);
+   --surface-muted: oklch(0.945 0.008 248);
+   --border: oklch(0.88 0.012 248);
+   --muted: oklch(0.49 0.02 250);
+   --accent: oklch(0.56 0.16 255);
+   --accent-strong: oklch(0.49 0.18 255);
+   --accent-foreground: oklch(0.985 0.01 255);
+   --header-foreground: oklch(0.985 0.01 250);
+   --copy: oklch(0.225 0.02 255 / 0.78);
+   --muted-copy: oklch(0.225 0.02 255 / 0.62);
+   --label: oklch(0.225 0.02 255 / 0.72);
+   --placeholder: oklch(0.49 0.02 250 / 0.55);
+   --focus-ring: oklch(0.56 0.16 255 / 0.18);
+   --surface-shadow: 0 18px 40px oklch(0.225 0.02 255 / 0.06);
+   --input-shadow: inset 0 1px 0 oklch(0.225 0.02 255 / 0.05);
+   --banner-control-bg: oklch(0.985 0.01 250 / 0.1);
+   --banner-control-bg-hover: oklch(0.985 0.01 250 / 0.16);
+   --banner-control-border: oklch(0.985 0.01 250 / 0.22);
+   --banner-control-ring: oklch(0.985 0.01 250 / 0.5);
+   --footer-text: oklch(0.985 0.01 250 / 0.92);
+   --footer-background: oklch(0.3 0.012 250);
+   --default-font-family:
+     Arial,
+     sans-serif;
+   --code-font-family:
+     "Sohne Mono",
+     "Menlo",
+     monospace,
+     "Apple Color Emoji",
+     "Segoe UI Emoji";
+ }
 
-.dark {
-  --background: #3b3b3b;
-  --foreground: #ededed;
-}
+ .dark {
+   color-scheme: dark;
+   --background: oklch(0.14 0.01 250);
+   --foreground: oklch(0.95 0.01 250);
+   --surface: oklch(0.19 0.01 250);
+   --surface-strong: oklch(0.23 0.012 250);
+   --surface-muted: oklch(0.21 0.012 250);
+   --border: oklch(0.3 0.012 250);
+   --muted: oklch(0.7 0.012 250);
+   --accent: oklch(0.68 0.16 255);
+   --accent-strong: oklch(0.73 0.16 255);
+   --accent-foreground: oklch(0.16 0.01 250);
+   --header-foreground: oklch(0.985 0.01 250);
+   --copy: oklch(0.95 0.01 250 / 0.82);
+   --muted-copy: oklch(0.95 0.01 250 / 0.66);
+   --label: oklch(0.95 0.01 250 / 0.78);
+   --placeholder: oklch(0.95 0.01 250 / 0.48);
+   --focus-ring: oklch(0.68 0.16 255 / 0.24);
+   --surface-shadow: 0 18px 40px oklch(0.02 0.01 250 / 0.36);
+   --input-shadow: inset 0 1px 0 oklch(0.985 0.01 250 / 0.04);
+   --banner-control-bg: oklch(0.985 0.01 250 / 0.08);
+   --banner-control-bg-hover: oklch(0.985 0.01 250 / 0.14);
+   --banner-control-border: oklch(0.985 0.01 250 / 0.2);
+   --banner-control-ring: oklch(0.985 0.01 250 / 0.48);
+   --footer-text: oklch(0.985 0.01 250 / 0.9);
+   --footer-background: oklch(0.18 0.01 250);
+ }
 
-.light {
-  --background: #efefef;
-  --foreground: #171717;
-}
+ * {
+   box-sizing: border-box;
+ }
 
-.light .learnio-header-top {
-  background: #3D63DD;
-}
+ html,
+ body {
+   min-height: 100%;
+   margin: 0;
+   padding: 0;
+ }
 
-.light .learnio-header-bottom {
-  background: #4e7eef;
-}
+ body {
+   display: flex;
+   flex-direction: column;
+   min-height: 100vh;
+   background: var(--background);
+   color: var(--foreground);
+   font-family: var(--default-font-family);
+ }
 
-* {
-  box-sizing: border-box;
-}
+ body>main {
+   flex: 1;
+ }
 
-html,
-body {
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-}
+ code,
+ pre,
+ kbd,
+ samp {
+   font-family: var(--code-font-family);
+ }
 
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--default-font-family);
-}
+ .learnio-surface {
+   background: var(--surface);
+   border: 1px solid var(--border);
+   color: var(--foreground);
+   box-shadow: var(--surface-shadow);
+ }
 
-body > main {
-  flex: 1;
-}
+ .learnio-surface-strong {
+   background: var(--surface-strong);
+   border: 1px solid var(--border);
+   color: var(--foreground);
+ }
 
-code,
-pre,
-kbd,
-samp {
-  font-family: var(--code-font-family);
-}
+ .learnio-label {
+   color: var(--label);
+ }
 
-@theme {
-  /* Cores personalizadas */
-  --color-background-cinza: #666666;
-  --color-background-branco: #f3f3f3;
-  --color-background-azul-royal-profundo: #2c3fa6;
-  --color-background-azul-escuro-vibrante: #3550b8;
-  --color-background-azul-medio-escuro: #4361cb;
-  --color-background-azul-real-vibrante: #3b55c2;
+ .learnio-field {
+   background: var(--surface-muted);
+   border: 1px solid var(--border);
+   color: var(--foreground);
+   box-shadow: var(--input-shadow);
+ }
 
-  /* Fonte personalizada */
-  --font-sans: Arial, sans-serif;
-}
+ .learnio-field::placeholder {
+   color: var(--placeholder);
+ }
+
+ .learnio-field:focus {
+   outline: none;
+   border-color: var(--accent);
+   box-shadow: 0 0 0 3px var(--focus-ring);
+ }
+
+ .learnio-title {
+   color: var(--foreground);
+ }
+
+ .learnio-copy {
+   color: var(--copy);
+ }
+
+ .learnio-muted {
+   color: var(--muted-copy);
+ }
+
+ .learnio-link {
+   color: var(--accent);
+   text-decoration: none;
+ }
+
+ .learnio-link:hover {
+   text-decoration: underline;
+ }
+
+ .learnio-link:focus-visible {
+   outline: 2px solid var(--focus-ring);
+   outline-offset: 2px;
+ }
+
+ .learnio-button-primary {
+   background: var(--accent);
+   color: var(--accent-foreground);
+   border: 1px solid transparent;
+   box-shadow: 0 10px 24px oklch(0.56 0.16 255 / 0.2);
+ }
+
+ .learnio-button-primary:hover {
+   background: var(--accent-strong);
+ }
+
+ .learnio-button-secondary {
+   background: var(--surface-muted);
+   color: var(--foreground);
+   border: 1px solid var(--border);
+ }
+
+ .learnio-button-secondary:hover {
+   background: var(--surface-strong);
+ }
+
+ .learnio-banner {
+   background: var(--accent-strong);
+   color: var(--header-foreground);
+ }
+
+ .learnio-banner-secondary {
+   background: var(--accent);
+   color: var(--header-foreground);
+ }
+
+ .learnio-banner-control {
+   border: 1px solid var(--banner-control-border);
+   background: var(--banner-control-bg);
+   color: var(--header-foreground);
+ }
+
+ .learnio-banner-control:hover {
+   background: var(--banner-control-bg-hover);
+ }
+
+ .learnio-footer {
+   background: var(--footer-background);
+   color: var(--footer-text);
+ }

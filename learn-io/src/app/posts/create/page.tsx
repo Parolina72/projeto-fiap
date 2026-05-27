@@ -8,7 +8,7 @@ export default function CreatePostPage() {
       <div className="mb-5">
         <Link
           href="/"
-          className="inline-flex h-11 items-center gap-2 rounded-md bg-background-azul-real-vibrante px-5 text-white no-underline transition-opacity hover:opacity-90"
+          className="learnio-button-primary inline-flex h-11 items-center gap-2 rounded-md px-5 no-underline transition-opacity hover:opacity-90"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           Voltar
