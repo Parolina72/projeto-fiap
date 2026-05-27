@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type Post } from "@/shared/data/posts";
-import { savePost, updatePost } from "@/shared/data/actions";
+import { createPost } from "@/shared/data/api";
+import { updatePost } from "@/shared/data/actions";
 
 type FormPostProps = {
   post?: Post;
@@ -15,12 +16,14 @@ export function FormPost({ post }: FormPostProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState(post?.title ?? "");
   const [author, setAuthor] = useState(post?.author ?? "");
+  const [imageUrl, setImageUrl] = useState((post as Post & { image_url?: string } | undefined)?.image_url ?? "");
   const [body, setBody] = useState(post?.body ?? "");
 
   useEffect(() => {
     if (post) {
       setTitle(post.title);
       setAuthor(post.author);
+      setImageUrl((post as Post & { image_url?: string }).image_url ?? "");
       setBody(post.body);
     }
   }, [post]);
@@ -31,9 +34,12 @@ export function FormPost({ post }: FormPostProps) {
 
     const trimmedTitle = title.trim();
     const trimmedAuthor = author.trim();
+    const trimmedImageUrl = imageUrl.trim();
     const trimmedBody = body.trim();
 
-    if (!trimmedTitle || !trimmedAuthor || !trimmedBody) {
+    const isEditing = Boolean(post);
+
+    if (!trimmedTitle || !trimmedImageUrl || !trimmedBody || (isEditing && !trimmedAuthor)) {
       setMessage(`Preencha todos os campos para ${post ? "atualizar" : "criar"} o post.`);
       setIsLoading(false);
       return;
@@ -56,23 +62,20 @@ export function FormPost({ post }: FormPostProps) {
           setMessage(result.message);
         }
       } else {
-        const result = await savePost({
+        await createPost({
           title: trimmedTitle,
-          author: trimmedAuthor,
-          body: trimmedBody,
+          content: trimmedBody,
+          image_url: trimmedImageUrl,
         });
 
-        if (result.success) {
-          setMessage(result.message);
-          setTitle("");
-          setAuthor("");
-          setBody("");
-          setTimeout(() => {
-            router.push("/");
-          }, 1500);
-        } else {
-          setMessage(result.message);
-        }
+        setMessage("Post criado com sucesso!");
+        setTitle("");
+        setAuthor("");
+        setImageUrl("");
+        setBody("");
+        setTimeout(() => {
+          router.push("/");
+        }, 1500);
       }
     } catch (error) {
       console.error("Erro ao salvar post:", error);
@@ -86,22 +89,22 @@ export function FormPost({ post }: FormPostProps) {
   const buttonLabel = post ? "Salvar alterações" : "Criar Post";
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white px-6 py-8 shadow-sm">
+    <div className="learnio-surface rounded-lg px-6 py-8">
       <header className="mb-5">
-        <h1 className="m-0 text-center text-3xl font-semibold text-zinc-900 sm:text-4xl">
+        <h1 className="learnio-title m-0 text-center text-3xl font-semibold tracking-tight sm:text-4xl">
           {formTitle}
         </h1>
       </header>
 
       {message && (
-        <div className="mb-5 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div className="mb-5 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm leading-6 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
           {message}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-zinc-700">
+          <label htmlFor="title" className="learnio-label block text-sm font-medium">
             Título
           </label>
           <input
@@ -110,13 +113,13 @@ export function FormPost({ post }: FormPostProps) {
             name="title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 sm:text-sm"
+            className="learnio-field mt-1 block w-full rounded-md px-3 py-2 sm:text-sm"
             placeholder="Digite o título do post"
           />
         </div>
 
         <div>
-          <label htmlFor="author" className="block text-sm font-medium text-zinc-700">
+          <label htmlFor="author" className="learnio-label block text-sm font-medium">
             Autor
           </label>
           <input
@@ -125,13 +128,28 @@ export function FormPost({ post }: FormPostProps) {
             name="author"
             value={author}
             onChange={(event) => setAuthor(event.target.value)}
-            className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 sm:text-sm"
+            className="learnio-field mt-1 block w-full rounded-md px-3 py-2 sm:text-sm"
             placeholder="Digite o nome do autor"
           />
         </div>
 
         <div>
-          <label htmlFor="body" className="block text-sm font-medium text-zinc-700">
+          <label htmlFor="imageUrl" className="learnio-label block text-sm font-medium">
+            Imagem
+          </label>
+          <input
+            type="text"
+            id="imageUrl"
+            name="imageUrl"
+            value={imageUrl}
+            onChange={(event) => setImageUrl(event.target.value)}
+            className="learnio-field mt-1 block w-full rounded-md px-3 py-2 sm:text-sm"
+            placeholder="Cole a URL da imagem"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="body" className="learnio-label block text-sm font-medium">
             Conteúdo
           </label>
           <textarea
@@ -140,7 +158,7 @@ export function FormPost({ post }: FormPostProps) {
             rows={6}
             value={body}
             onChange={(event) => setBody(event.target.value)}
-            className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 sm:text-sm"
+            className="learnio-field mt-1 block w-full rounded-md px-3 py-2 sm:text-sm"
             placeholder="Digite o conteúdo do post"
           />
         </div>
@@ -148,7 +166,7 @@ export function FormPost({ post }: FormPostProps) {
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="learnio-button-primary inline-flex items-center rounded-md px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? "Salvando..." : buttonLabel}
         </button>

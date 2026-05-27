@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { findUserByCredentials } from "@/shared/data/api";
+import { extractAuthorIdFromToken, findUserByCredentials } from "@/shared/data/api";
 
 export function LoginPage() {
   const router = useRouter();
@@ -29,7 +29,19 @@ export function LoginPage() {
       }
 
       localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("user", JSON.stringify(user.user));
+      localStorage.setItem("authSession", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user.user ?? user));
+
+      const resolvedUserId =
+        extractAuthorIdFromToken((user as { token?: string }).token) ??
+        extractAuthorIdFromToken((user as { access_token?: string }).access_token) ??
+        extractAuthorIdFromToken((user.user as { token?: string } | undefined)?.token);
+
+      if (Number.isFinite(resolvedUserId)) {
+        localStorage.setItem("author_id", String(resolvedUserId));
+      }
+
+      window.dispatchEvent(new Event("auth-changed"));
       setMessage("Login efetuado com sucesso!");
 
       setTimeout(() => {
@@ -49,17 +61,17 @@ export function LoginPage() {
 
   return (
     <main className="mx-auto w-full max-w-[560px] px-6 py-8">
-      <section className="mb-6 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <h2 className="mb-4 text-2xl font-semibold">Entrar</h2>
+      <section className="learnio-surface mb-6 rounded-3xl p-8">
+        <h2 className="learnio-title mb-4 text-2xl font-semibold tracking-tight">Entrar</h2>
 
         {message && (
-          <div className={`mb-5 rounded-md border px-4 py-3 text-sm ${message.includes("sucesso") ? "border-green-200 bg-green-50 text-green-800" : "border-red-200 bg-red-50 text-red-800"}`}>
+          <div className={`mb-5 rounded-md border px-4 py-3 text-sm leading-6 ${message.includes("sucesso") ? "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200" : "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"}`}>
             {message}
           </div>
         )}
 
         <div className="mb-4">
-          <label htmlFor="login-username" className="mb-2 block text-sm font-medium text-zinc-700">
+          <label htmlFor="login-username" className="learnio-label mb-2 block text-sm font-medium">
             Usuário
           </label>
           <input
@@ -67,13 +79,13 @@ export function LoginPage() {
             type="text"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
-            className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-base text-zinc-900 outline-none focus:border-background-azul-real-vibrante focus:ring-2 focus:ring-background-azul-real-vibrante/20"
+            className="learnio-field w-full rounded-xl px-4 py-3 text-base"
             placeholder="Nome de usuário"
           />
         </div>
 
         <div className="mb-6">
-          <label htmlFor="login-password" className="mb-2 block text-sm font-medium text-zinc-700">
+          <label htmlFor="login-password" className="learnio-label mb-2 block text-sm font-medium">
             Senha
           </label>
           <input
@@ -81,7 +93,7 @@ export function LoginPage() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-base text-zinc-900 outline-none focus:border-background-azul-real-vibrante focus:ring-2 focus:ring-background-azul-real-vibrante/20"
+            className="learnio-field w-full rounded-xl px-4 py-3 text-base"
             placeholder="Sua senha"
           />
         </div>
@@ -90,7 +102,7 @@ export function LoginPage() {
           type="button"
           onClick={handleLogin}
           disabled={isLoading}
-          className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-background-azul-real-vibrante px-5 text-base font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="learnio-button-primary inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-base font-semibold transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? "Entrando..." : "Entrar"}
         </button>

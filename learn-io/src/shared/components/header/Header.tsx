@@ -14,9 +14,20 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
   const router = useRouter();
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem("isAuthenticated");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsAuthenticated(storedAuth === "true");
+    function syncAuthState() {
+      const storedAuth = localStorage.getItem("isAuthenticated");
+      setIsAuthenticated(storedAuth === "true");
+    }
+
+    syncAuthState();
+
+    window.addEventListener("auth-changed", syncAuthState);
+    window.addEventListener("storage", syncAuthState);
+
+    return () => {
+      window.removeEventListener("auth-changed", syncAuthState);
+      window.removeEventListener("storage", syncAuthState);
+    };
   }, []);
 
   function handleAuthToggle() {
@@ -29,12 +40,14 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
     } else {
       localStorage.removeItem("isAuthenticated");
     }
+
+    window.dispatchEvent(new Event("auth-changed"));
   }
 
   function handleRegisterClick() {
     router.push('/create-usuario/informacoes-acesso');
   }
-  
+
   function handleLoginClick() {
     if (isAuthenticated) {
       handleAuthToggle();
@@ -45,22 +58,22 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
 
   return (
     <header className='w-full'>
-      <div className='learnio-header-top w-full bg-background-azul-royal-profundo bg-[linear-gradient(180deg,#26388f_0%,#2f43ad_48%,#3b55c2_100%)]'>
+      <div className='learnio-banner w-full'>
         <div className='flex items-center justify-between h-[60px] m-auto max-w-[1440px] px-11'>
-          <h1 className='m-0 text-white text-[1.25rem] leading-none font-medium'>{title}</h1>
+          <h1 className='m-0 text-[1.25rem] leading-none font-medium text-current'>{title}</h1>
           <ThemeToggle />
         </div>
       </div>
-      <div className='learnio-header-bottom w-full bg-background-azul-escuro-vibrante bg-[linear-gradient(180deg, #3148a9_0%, #3853bc_52%, #4361cb_100% )]' aria-label="Navegacao principal">
+      <div className='learnio-banner-secondary w-full' aria-label="Navegacao principal">
         <div className='flex items-center gap-[72px] h-12 m-auto max-w-[1440px] px-11'>
-          <a href="/" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
+          <Link href="/" className='cursor-pointer text-[0.95rem] leading-none no-underline text-current'>
             Postagens
-          </a>
-          <a href="#" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
+          </Link>
+          <a href="#" className='cursor-pointer text-[0.95rem] leading-none no-underline text-current'>
             Administrativo
           </a>
           {isAuthenticated && (
-            <Link href="/posts/create" className='text-white cursor-pointer text-[0.95rem] leading-none no-underline'>
+            <Link href="/posts/create" className='cursor-pointer text-[0.95rem] leading-none no-underline text-current'>
               Criar Postagem
             </Link>
           )}
@@ -68,14 +81,14 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
             <button
               type='button'
               onClick={handleRegisterClick}
-              className='ml-auto rounded-md border border-white/30 px-4 py-2 text-white text-[0.95rem] leading-none hover:bg-white/10'
+              className='learnio-banner-control ml-auto rounded-md px-4 py-2 text-[0.95rem] leading-none transition-colors'
             >
               Cadastrar
             </button>
             <button
               type='button'
               onClick={handleLoginClick}
-              className='ml-auto rounded-md border border-white/30 px-4 py-2 text-white text-[0.95rem] leading-none hover:bg-white/10'
+              className='learnio-banner-control ml-auto rounded-md px-4 py-2 text-[0.95rem] leading-none transition-colors'
             >
               {isAuthenticated ? "Sair" : "Login"}
             </button>
