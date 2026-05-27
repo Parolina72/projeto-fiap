@@ -184,3 +184,86 @@ export async function getPosts(): Promise<IPost[]> {
     throw error;
   }
 }
+
+export async function createPost(post: {
+  title: string
+  content: string
+  image_url: string
+  author_id: number
+}): Promise<IPost> {
+  const response = await fetch(`${API_BASE_URL}/posts`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(post),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error("Dados do erro (createPost):", errorData)
+    throw new Error(errorData.message || `Erro ao criar post (${response.status})`)
+  }
+
+  return response.json()
+}
+
+export async function updatePost(
+  id: number,
+  post: Partial<{
+    title: string
+    content: string
+    image_url: string
+    author_id: number
+  }>,
+): Promise<IPost> {
+  // busca o post atual para preencher campos não informados (API requer todos os campos)
+  const existingResp = await fetch(`${API_BASE_URL}/posts/${id}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+
+  if (!existingResp.ok) {
+    const err = await existingResp.json().catch(() => ({}))
+    throw new Error(err.message || `Erro ao buscar post (${existingResp.status})`)
+  }
+
+  const existing = await existingResp.json()
+
+  const payload = {
+    title: post.title ?? existing.title,
+    content: post.content ?? existing.content,
+    image_url: post.image_url ?? existing.image_url,
+    author_id: post.author_id ?? existing.author_id,
+  }
+  // Se a API de GET não expõe `image_url` (por validação de schema), exija que o caller forneça
+  if (!payload.image_url) {
+    throw new Error('`image_url` é necessário para atualizar o post; forneça `image_url` no segundo argumento')
+  }
+  const response = await fetch(`${API_BASE_URL}/posts/${id}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Dados do erro (updatePost):', errorData)
+    throw new Error(errorData.message || `Erro ao atualizar post (${response.status})`)
+  }
+
+  return response.json()
+}
+
+export async function getMyPerson(): Promise<IPerson> {
+  const response = await fetch(`${API_BASE_URL}/person/me`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Dados do erro (getMyPerson):', errorData)
+    throw new Error(errorData.message || `Erro ao buscar person (${response.status})`)
+  }
+
+  return response.json()
+}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type Post } from "@/shared/data/posts";
-import { savePost, updatePost } from "@/shared/data/actions";
+import { createPost, updatePost as apiUpdatePost, getMyPerson } from "@/shared/data/api";
 
 type FormPostProps = {
   post?: Post;
@@ -14,26 +14,50 @@ export function FormPost({ post }: FormPostProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState(post?.title ?? "");
-  const [author, setAuthor] = useState(post?.author ?? "");
+  const [authorId, setAuthorId] = useState<number | string>(
+    (post as any)?.author_id ?? ""
+  );
+  const [authorName, setAuthorName] = useState<string>((post as any)?.author ?? "");
   const [body, setBody] = useState(post?.body ?? "");
+  const [imageUrl, setImageUrl] = useState<string | undefined>((post as any)?.image_url ?? "");
 
   useEffect(() => {
     if (post) {
       setTitle(post.title);
-      setAuthor(post.author);
+      setAuthorId((post as any)?.author_id ?? "");
+      setAuthorName((post as any)?.author ?? "");
       setBody(post.body);
+      setImageUrl((post as any)?.image_url ?? "");
     }
   }, [post]);
+
+  useEffect(() => {
+    async function loadMyPerson() {
+      try {
+        // if post exists, prefer its author; otherwise fetch current user's person
+        if (post) return
+        const person = await getMyPerson()
+        if (person) {
+          setAuthorId(person.id ?? "")
+          setAuthorName(person.name ?? "")
+        }
+      } catch (err) {
+        console.debug('Não foi possível obter Person do usuário autenticado', err)
+      }
+    }
+
+    loadMyPerson()
+  }, [post])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
 
     const trimmedTitle = title.trim();
-    const trimmedAuthor = author.trim();
+    const trimmedAuthorId = String(authorId).trim();
     const trimmedBody = body.trim();
 
-    if (!trimmedTitle || !trimmedAuthor || !trimmedBody) {
+    if (!trimmedTitle || !trimmedBody || !trimmedAuthorId || !imageUrl) {
       setMessage(`Preencha todos os campos para ${post ? "atualizar" : "criar"} o post.`);
       setIsLoading(false);
       return;
@@ -41,38 +65,33 @@ export function FormPost({ post }: FormPostProps) {
 
     try {
       if (post) {
-        const result = await updatePost(post.id, {
+        const updated = await apiUpdatePost(Number(post.id), {
           title: trimmedTitle,
-          author: trimmedAuthor,
-          body: trimmedBody,
+          content: trimmedBody,
+          image_url: imageUrl,
+          author_id: Number(trimmedAuthorId),
         });
 
-        if (result.success) {
-          setMessage(result.message);
-          setTimeout(() => {
-            router.push(`/posts/${post.id}`);
-          }, 1500);
-        } else {
-          setMessage(result.message);
-        }
+        setMessage("Post atualizado com sucesso!");
+        setTimeout(() => {
+          router.push(`/posts/${updated.id}`);
+        }, 1500);
       } else {
-        const result = await savePost({
+        const created = await createPost({
           title: trimmedTitle,
-          author: trimmedAuthor,
-          body: trimmedBody,
+          content: trimmedBody,
+          image_url: imageUrl!,
+          author_id: Number(trimmedAuthorId),
         });
 
-        if (result.success) {
-          setMessage(result.message);
-          setTitle("");
-          setAuthor("");
-          setBody("");
-          setTimeout(() => {
-            router.push("/");
-          }, 1500);
-        } else {
-          setMessage(result.message);
-        }
+        setMessage("Post criado com sucesso!");
+        setTitle("");
+        setAuthorId("");
+        setBody("");
+        setImageUrl("");
+        setTimeout(() => {
+          router.push(`/posts/${created.id}`);
+        }, 1500);
       }
     } catch (error) {
       console.error("Erro ao salvar post:", error);
@@ -116,17 +135,33 @@ export function FormPost({ post }: FormPostProps) {
         </div>
 
         <div>
-          <label htmlFor="author" className="block text-sm font-medium text-zinc-700">
+          <label htmlFor="authorName" className="block text-sm font-medium text-zinc-700">
             Autor
           </label>
           <input
             type="text"
-            id="author"
-            name="author"
-            value={author}
-            onChange={(event) => setAuthor(event.target.value)}
+            id="authorName"
+            name="authorName"
+            value={authorName}
+            disabled
+            className="mt-1 block w-full rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 shadow-sm sm:text-sm"
+          />
+        </div>
+
+        <input type="hidden" name="author_id" value={String(authorId)} />
+
+        <div>
+          <label htmlFor="imageUrl" className="block text-sm font-medium text-zinc-700">
+            Imagem (URL)
+          </label>
+          <input
+            type="text"
+            id="imageUrl"
+            name="imageUrl"
+            value={imageUrl ?? ""}
+            onChange={(event) => setImageUrl(event.target.value)}
             className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 sm:text-sm"
-            placeholder="Digite o nome do autor"
+            placeholder="https://exemplo.com/imagem.jpg"
           />
         </div>
 
