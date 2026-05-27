@@ -15,6 +15,7 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
 
   useEffect(() => {
     const storedAuth = localStorage.getItem("isAuthenticated");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAuthenticated(storedAuth === "true");
   }, []);
 

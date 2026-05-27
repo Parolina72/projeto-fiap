@@ -29,7 +29,7 @@ export function LoginPage() {
       }
 
       localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user.user));
       setMessage("Login efetuado com sucesso!");
 
       setTimeout(() => {
