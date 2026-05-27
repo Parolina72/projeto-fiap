@@ -148,6 +148,25 @@ export function extractAuthorIdFromToken(token?: string | null): number | undefi
   }
 }
 
+export function extractRoleFromToken(token?: string | null): string | undefined {
+  if (!token) {
+    return undefined;
+  }
+
+  const tokenParts = token.split(".");
+
+  if (tokenParts.length < 2) {
+    return undefined;
+  }
+
+  try {
+    const payload = JSON.parse(decodeBase64Url(tokenParts[1])) as Record<string, unknown>;
+    return typeof payload.role === "string" ? payload.role : undefined;
+  } catch (error) {
+    console.error("Erro ao decodificar token JWT:", error);
+    return undefined;
+  }
+}
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -279,10 +298,15 @@ export async function getPosts(): Promise<IPost[]> {
   }
 }
 
+export async function getPostById(id: number): Promise<IPost | null> {
+  const posts = await getPosts();
+  return posts.find((post) => Number(post.id) === id) ?? null;
+}
+
 export async function createPost(post: {
   title: string
   content: string
-  image_url: string
+  image_url?: string
   author_id: number
 }): Promise<IPost> {
   const response = await fetch(`${API_BASE_URL}/posts`, {
@@ -322,15 +346,21 @@ export async function updatePost(
 
   const existing = await existingResp.json()
 
-  const payload = {
+  const payload: {
+    title: string
+    content: string
+    author_id: number
+    image_url?: string
+  } = {
     title: post.title ?? existing.title,
     content: post.content ?? existing.content,
-    image_url: post.image_url ?? existing.image_url,
     author_id: post.author_id ?? existing.author_id,
   }
-  // Se a API de GET não expõe `image_url` (por validação de schema), exija que o caller forneça
-  if (!payload.image_url) {
-    throw new Error('`image_url` é necessário para atualizar o post; forneça `image_url` no segundo argumento')
+
+  if (post.image_url !== undefined) {
+    payload.image_url = post.image_url || undefined
+  } else if (existing.image_url) {
+    payload.image_url = existing.image_url
   }
   const response = await fetch(`${API_BASE_URL}/posts/${id}`, {
     method: 'PUT',
@@ -345,6 +375,30 @@ export async function updatePost(
   }
 
   return response.json()
+}
+
+export async function removePost(id: number): Promise<void> {
+  const headers = { ...(getAuthHeaders() ?? {}) }
+  // Fastify throws when Content-Type: application/json is set but body is empty
+  if (headers && 'Content-Type' in headers) {
+    try {
+      // cast to writable record and remove header
+      ;(headers as Record<string, string>)['Content-Type'] && delete (headers as Record<string, string>)['Content-Type']
+    } catch {
+      // ignore
+    }
+  }
+
+  const response = await fetch(`${API_BASE_URL}/posts/${id}`, {
+    method: 'DELETE',
+    headers,
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Dados do erro (removePost):', errorData)
+    throw new Error(errorData.message || `Erro ao remover post (${response.status})`)
+  }
 }
 
 export async function getMyPerson(): Promise<IPerson> {

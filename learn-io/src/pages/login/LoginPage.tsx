@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { extractAuthorIdFromToken, findUserByCredentials } from "@/shared/data/api";
+import {
+  extractAuthorIdFromToken,
+  extractRoleFromToken,
+  findUserByCredentials,
+} from "@/shared/data/api";
 
 export function LoginPage() {
   const router = useRouter();
@@ -30,12 +34,33 @@ export function LoginPage() {
 
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("authSession", JSON.stringify(user));
-      localStorage.setItem("user", JSON.stringify(user.user ?? user));
+
+      const currentUser = (user as { user?: unknown }).user ?? user;
+      const parsedUser =
+        typeof currentUser === "object" && currentUser !== null
+          ? (currentUser as Record<string, unknown>)
+          : {};
+
+      if (!parsedUser.role) {
+        const token =
+          (user as { token?: string }).token ??
+          (user as { access_token?: string }).access_token ??
+          ((user as { user?: { token?: string } }).user ?? {})?.token;
+
+        const tokenRole = extractRoleFromToken(token);
+        if (tokenRole) {
+          parsedUser.role = tokenRole;
+        }
+      }
+
+      localStorage.setItem("user", JSON.stringify(parsedUser));
 
       const resolvedUserId =
         extractAuthorIdFromToken((user as { token?: string }).token) ??
         extractAuthorIdFromToken((user as { access_token?: string }).access_token) ??
-        extractAuthorIdFromToken((user.user as { token?: string } | undefined)?.token);
+        extractAuthorIdFromToken(
+          ((user as { user?: { token?: string } }).user ?? {})?.token
+        );
 
       if (Number.isFinite(resolvedUserId)) {
         localStorage.setItem("author_id", String(resolvedUserId));

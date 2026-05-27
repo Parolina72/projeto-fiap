@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/shared/components/theme-toggle/ThemeToggle";
+import { extractRoleFromToken } from "@/shared/data/api";
 import Link from "next/link";
 
 type HeaderProps = {
@@ -11,12 +12,22 @@ type HeaderProps = {
 
 export function Header({ title = "Learn.io" }: HeaderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string | undefined>(undefined);
   const router = useRouter();
 
   useEffect(() => {
     function syncAuthState() {
       const storedAuth = localStorage.getItem("isAuthenticated");
+      const authToken = localStorage.getItem("authToken");
+      
       setIsAuthenticated(storedAuth === "true");
+      
+      if (authToken) {
+        const role = extractRoleFromToken(authToken);
+        setUserRole(role);
+      } else {
+        setUserRole(undefined);
+      }
     }
 
     syncAuthState();
@@ -67,12 +78,14 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
       <div className='learnio-banner-secondary w-full' aria-label="Navegacao principal">
         <div className='flex items-center gap-[72px] h-12 m-auto max-w-[1440px] px-11'>
           <Link href="/" className='cursor-pointer text-[0.95rem] leading-none no-underline text-current'>
-            Postagens
+            Página Inicial
           </Link>
-          <a href="#" className='cursor-pointer text-[0.95rem] leading-none no-underline text-current'>
-            Administrativo
-          </a>
-          {isAuthenticated && (
+          {isAuthenticated && userRole === "PROFESSOR" && (
+            <Link href="/admin" className='cursor-pointer text-[0.95rem] leading-none no-underline text-current'>
+              Administrativo
+            </Link>
+          )}
+          {isAuthenticated && userRole === "PROFESSOR" && (
             <Link href="/posts/create" className='cursor-pointer text-[0.95rem] leading-none no-underline text-current'>
               Criar Postagem
             </Link>
