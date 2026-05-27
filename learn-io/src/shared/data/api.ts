@@ -279,52 +279,85 @@ export async function getPosts(): Promise<IPost[]> {
   }
 }
 
-export async function getPostById(id: number): Promise<IPost | null> {
-  const posts = await getPosts();
-  return posts.find((post) => Number(post.id) === id) ?? null;
-}
-
-export async function createPost(
-  post: Pick<IPost, "title" | "content"> & { image_url: string; author_id?: number }
-): Promise<IPost> {
-  const payload: { title: string; content: string; image_url: string; author_id?: number } = {
-    title: post.title,
-    content: post.content,
-    image_url: post.image_url,
-  };
-
-  if (typeof window !== "undefined") {
-    const sessionValue = readStoredJson("authSession");
-    const sessionToken =
-      sessionValue && typeof sessionValue === "object"
-        ? (sessionValue as { token?: string }).token
-        : undefined;
-
-    const resolvedAuthorId =
-      findNumericId(localStorage.getItem("author_id")) ??
-      extractAuthorIdFromToken(localStorage.getItem("authToken")) ??
-      extractAuthorIdFromToken(sessionToken) ??
-      findNumericId(sessionValue) ??
-      findNumericId(readStoredJson("user"));
-
-    if (typeof resolvedAuthorId === "number") {
-      payload.author_id = post.author_id ?? resolvedAuthorId;
-    }
-  }
-
+export async function createPost(post: {
+  title: string
+  content: string
+  image_url: string
+  author_id: number
+}): Promise<IPost> {
   const response = await fetch(`${API_BASE_URL}/posts`, {
     method: "POST",
     headers: getAuthHeaders(),
-    body: JSON.stringify(payload),
-  });
+    body: JSON.stringify(post),
+  })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-
-    throw new Error(
-      errorData.message || `Erro ao criar post (${response.status})`
-    );
+    const errorData = await response.json().catch(() => ({}))
+    console.error("Dados do erro (createPost):", errorData)
+    throw new Error(errorData.message || `Erro ao criar post (${response.status})`)
   }
 
-  return response.json();
+  return response.json()
+}
+
+export async function updatePost(
+  id: number,
+  post: Partial<{
+    title: string
+    content: string
+    image_url: string
+    author_id: number
+  }>,
+): Promise<IPost> {
+  // busca o post atual para preencher campos não informados (API requer todos os campos)
+  const existingResp = await fetch(`${API_BASE_URL}/posts/${id}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+
+  if (!existingResp.ok) {
+    const err = await existingResp.json().catch(() => ({}))
+    throw new Error(err.message || `Erro ao buscar post (${existingResp.status})`)
+  }
+
+  const existing = await existingResp.json()
+
+  const payload = {
+    title: post.title ?? existing.title,
+    content: post.content ?? existing.content,
+    image_url: post.image_url ?? existing.image_url,
+    author_id: post.author_id ?? existing.author_id,
+  }
+  // Se a API de GET não expõe `image_url` (por validação de schema), exija que o caller forneça
+  if (!payload.image_url) {
+    throw new Error('`image_url` é necessário para atualizar o post; forneça `image_url` no segundo argumento')
+  }
+  const response = await fetch(`${API_BASE_URL}/posts/${id}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Dados do erro (updatePost):', errorData)
+    throw new Error(errorData.message || `Erro ao atualizar post (${response.status})`)
+  }
+
+  return response.json()
+}
+
+export async function getMyPerson(): Promise<IPerson> {
+  const response = await fetch(`${API_BASE_URL}/person/me`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Dados do erro (getMyPerson):', errorData)
+    throw new Error(errorData.message || `Erro ao buscar person (${response.status})`)
+  }
+
+  return response.json()
 }

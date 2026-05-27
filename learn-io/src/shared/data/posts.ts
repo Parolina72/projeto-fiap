@@ -72,5 +72,11 @@ export const posts: Post[] = [
     title: "teste",
     author: "teste",
     body: "teste",
+  },
+  {
+    id: 12,
+    title: "teste",
+    author: "teste",
+    body: "teste",
   }
 ];
