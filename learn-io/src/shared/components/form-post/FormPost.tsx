@@ -57,8 +57,8 @@ export function FormPost({ post }: FormPostProps) {
     const trimmedAuthorId = String(authorId).trim();
     const trimmedBody = body.trim();
 
-    if (!trimmedTitle || !trimmedBody || !trimmedAuthorId || !imageUrl) {
-      setMessage(`Preencha todos os campos para ${post ? "atualizar" : "criar"} o post.`);
+    if (!trimmedTitle || !trimmedBody || !trimmedAuthorId) {
+      setMessage(`Preencha os campos obrigatórios para ${post ? "atualizar" : "criar"} o post.`);
       setIsLoading(false);
       return;
     }
@@ -68,7 +68,7 @@ export function FormPost({ post }: FormPostProps) {
         const updated = await apiUpdatePost(Number(post.id), {
           title: trimmedTitle,
           content: trimmedBody,
-          image_url: imageUrl,
+          image_url: imageUrl || undefined,
           author_id: Number(trimmedAuthorId),
         });
 
@@ -80,7 +80,7 @@ export function FormPost({ post }: FormPostProps) {
         const created = await createPost({
           title: trimmedTitle,
           content: trimmedBody,
-          image_url: imageUrl!,
+          image_url: imageUrl || undefined,
           author_id: Number(trimmedAuthorId),
         });
 
@@ -151,23 +151,8 @@ export function FormPost({ post }: FormPostProps) {
         <input type="hidden" name="author_id" value={String(authorId)} />
 
         <div>
-          <label htmlFor="imageUrl" className="block text-sm font-medium text-zinc-700">
-            Imagem (URL)
-          </label>
-          <input
-            type="text"
-            id="imageUrl"
-            name="imageUrl"
-            value={imageUrl ?? ""}
-            onChange={(event) => setImageUrl(event.target.value)}
-            className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 sm:text-sm"
-            placeholder="https://exemplo.com/imagem.jpg"
-          />
-        </div>
-
-        <div>
           <label htmlFor="imageUrl" className="learnio-label block text-sm font-medium">
-            Imagem
+            Imagem (opcional)
           </label>
           <input
             type="text"

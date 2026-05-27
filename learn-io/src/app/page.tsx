@@ -58,12 +58,6 @@ export default function Home() {
               className="learnio-field h-11 w-full rounded-md px-3 text-base leading-6"
             />
 
-            <button
-              type="button"
-              className="learnio-button-primary h-11 rounded-md px-5 font-semibold transition-opacity hover:opacity-90 sm:w-auto"
-            >
-              Buscar
-            </button>
           </div>
         </div>
       </section>
