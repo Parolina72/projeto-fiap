@@ -91,13 +91,15 @@ export function Header({ title = "Learn.io" }: HeaderProps) {
             </Link>
           )}
           <div className='ml-auto flex items-center gap-3'>
-            <button
-              type='button'
-              onClick={handleRegisterClick}
-              className='learnio-banner-control ml-auto rounded-md px-4 py-2 text-[0.95rem] leading-none transition-colors'
-            >
-              Cadastrar
-            </button>
+            {!isAuthenticated && (
+              <button
+                type='button'
+                onClick={handleRegisterClick}
+                className='learnio-banner-control ml-auto rounded-md px-4 py-2 text-[0.95rem] leading-none transition-colors'
+              >
+                Cadastrar
+              </button>
+            )}
             <button
               type='button'
               onClick={handleLoginClick}

@@ -144,7 +144,13 @@ export default function PostDetailPage() {
   const detailPost: Post = {
     id: Number(post.id),
     title: post.title,
-    author: post.author_id ? `Autor #${post.author_id}` : "Anônimo",
+    author:
+      post.author_name ??
+      (typeof post.author_id === "object"
+        ? (post.author_id as any)?.name
+        : post.author_id
+        ? `Autor #${post.author_id}`
+        : "Anônimo"),
     body: post.content,
     image_url: undefined,
   };

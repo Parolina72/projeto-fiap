@@ -85,7 +85,13 @@ export default function Home() {
 
                 <p className="learnio-muted mb-2 mt-1 text-sm leading-6">
                   Autor:{" "}
-                  <strong>{post.author_id || "Anônimo"}</strong>
+                  <strong>
+                    {post.author_name ??
+                      (typeof post.author_id === "object"
+                        ? (post.author_id as any)?.name
+                        : post.author_id)
+                      ?? "Anônimo"}
+                  </strong>
                 </p>
 
                 <p className="learnio-copy m-0 text-base leading-relaxed">

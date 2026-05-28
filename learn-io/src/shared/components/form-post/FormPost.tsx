@@ -3,11 +3,77 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { type Post } from "@/shared/data/posts";
-import { createPost, updatePost as apiUpdatePost, getMyPerson } from "@/shared/data/api";
+import { type IPost, createPost, updatePost as apiUpdatePost, getMyPerson } from "@/shared/data/api";
 
 type FormPostProps = {
-  post?: Post;
+  post?: Post | IPost;
 };
+
+function resolveAuthorId(value: unknown): number | string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (value && typeof value === "object") {
+    const candidate = value as Record<string, unknown>;
+    for (const key of ["id", "author_id", "authorId", "user_id", "userId"]) {
+      const nested = candidate[key];
+      if (typeof nested === "number" && Number.isFinite(nested)) {
+        return nested;
+      }
+      if (typeof nested === "string" && nested.trim()) {
+        return nested.trim();
+      }
+    }
+  }
+
+  return "";
+}
+
+function resolveAuthorName(post: Post | IPost | undefined): string {
+  if (!post) {
+    return "";
+  }
+
+  if ((post as IPost).author_name) {
+    return (post as IPost).author_name as string;
+  }
+
+  if ((post as any).author) {
+    return (post as any).author as string;
+  }
+
+  if ((post as any).author_id && typeof (post as any).author_id === "object") {
+    return ((post as any).author_id as any).name ?? "";
+  }
+
+  return "";
+}
+
+function resolveAuthorIdFromPost(post: Post | IPost | undefined): number | string {
+  if (!post) {
+    return "";
+  }
+
+  const resolvedId = resolveAuthorId((post as any).author_id ?? "");
+  if (resolvedId) {
+    return resolvedId;
+  }
+
+  const authorText = (post as any).author;
+  if (typeof authorText === "string") {
+    const match = authorText.match(/Autor #(\d+)/);
+    if (match) {
+      return Number(match[1]);
+    }
+  }
+
+  return "";
+}
 
 export function FormPost({ post }: FormPostProps) {
   const router = useRouter();
@@ -15,18 +81,18 @@ export function FormPost({ post }: FormPostProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState(post?.title ?? "");
   const [authorId, setAuthorId] = useState<number | string>(
-    (post as any)?.author_id ?? ""
+    resolveAuthorId((post as any)?.author_id ?? "")
   );
-  const [authorName, setAuthorName] = useState<string>((post as any)?.author ?? "");
-  const [body, setBody] = useState(post?.body ?? "");
+  const [authorName, setAuthorName] = useState<string>(resolveAuthorName(post));
+  const [body, setBody] = useState((post as any)?.body ?? (post as any)?.content ?? "");
   const [imageUrl, setImageUrl] = useState<string | undefined>((post as any)?.image_url ?? "");
 
   useEffect(() => {
     if (post) {
       setTitle(post.title);
-      setAuthorId((post as any)?.author_id ?? "");
-      setAuthorName((post as any)?.author ?? "");
-      setBody(post.body);
+      setAuthorId(resolveAuthorId((post as any)?.author_id ?? ""));
+      setAuthorName(resolveAuthorName(post));
+      setBody((post as any)?.body ?? (post as any)?.content ?? "");
       setImageUrl((post as any)?.image_url ?? "");
     }
   }, [post]);
@@ -54,10 +120,11 @@ export function FormPost({ post }: FormPostProps) {
     setIsLoading(true);
 
     const trimmedTitle = title.trim();
-    const trimmedAuthorId = String(authorId).trim();
+    const resolvedAuthorId = authorId || resolveAuthorIdFromPost(post);
+    const trimmedAuthorId = String(resolvedAuthorId).trim();
     const trimmedBody = body.trim();
 
-    if (!trimmedTitle || !trimmedBody || !trimmedAuthorId) {
+    if (!trimmedTitle || !trimmedBody || (!trimmedAuthorId && !post)) {
       setMessage(`Preencha os campos obrigatórios para ${post ? "atualizar" : "criar"} o post.`);
       setIsLoading(false);
       return;
@@ -65,12 +132,22 @@ export function FormPost({ post }: FormPostProps) {
 
     try {
       if (post) {
-        const updated = await apiUpdatePost(Number(post.id), {
+        const updatePayload: Partial<{
+          title: string
+          content: string
+          image_url: string
+          author_id: number
+        }> = {
           title: trimmedTitle,
           content: trimmedBody,
           image_url: imageUrl || undefined,
-          author_id: Number(trimmedAuthorId),
-        });
+        };
+
+        if (trimmedAuthorId) {
+          updatePayload.author_id = Number(trimmedAuthorId);
+        }
+
+        const updated = await apiUpdatePost(Number(post.id), updatePayload);
 
         setMessage("Post atualizado com sucesso!");
         setTimeout(() => {

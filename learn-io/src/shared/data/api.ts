@@ -18,7 +18,10 @@ export interface IPost {
   id: string;
   title: string;
   content: string;
-  author_id?: number;
+  // author_id can be a numeric id or the related Person object returned by the API
+  author_id?: number | { id?: number; name?: string };
+  // convenience field added by the backend: author's display name
+  author_name?: string;
   created_at: string;
 }
 
@@ -272,7 +275,7 @@ export async function createUser(user: Omit<IUser, "id">): Promise<IUser> {
 
 export async function getPosts(): Promise<IPost[]> {
   console.log("Buscando posts do backend...");
-  console.log("URL:", `${API_BASE_URL}/api/posts`);
+  console.log("URL:", `${API_BASE_URL}/posts`);
 
   try {
     const response = await fetch(`${API_BASE_URL}/posts`, {

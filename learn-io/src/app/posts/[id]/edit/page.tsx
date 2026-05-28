@@ -70,12 +70,19 @@ export default function EditPostPage() {
     );
   }
 
-  const editPost: Post = {
+  const editPost: Post & { author_id?: number | { id?: number; name?: string } } = {
     id: Number(post.id),
     title: post.title,
-    author: post.author_id ? `Autor #${post.author_id}` : "Anônimo",
+    author:
+      post.author_name ??
+      (typeof post.author_id === "object"
+        ? (post.author_id as any)?.name
+        : post.author_id
+        ? `Autor #${post.author_id}`
+        : "Anônimo"),
     body: post.content,
     image_url: undefined,
+    author_id: post.author_id,
   };
 
   return (
