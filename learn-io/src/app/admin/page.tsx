@@ -114,7 +114,14 @@ export default function AdminPage() {
                         </Link>
                       </h3>
                       <p className="learnio-muted mt-1 text-sm leading-6">
-                        Autor: <strong>{post.author_id || "Anônimo"}</strong>
+                        Autor:{" "}
+                        <strong>
+                          {post.author_name ??
+                            (typeof post.author_id === "object"
+                              ? (post.author_id as any)?.name
+                              : post.author_id)
+                            ?? "Anônimo"}
+                        </strong>
                       </p>
                     </div>
 
